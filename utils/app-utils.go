@@ -9,17 +9,21 @@ import (
 	"github.com/rivo/tview"
 )
 
+// Reference to the channel for UI updates
+var UIEventsChan chan func()
+
 // ==============================
 // ASCII ART LOADING
 // ==============================
 
 // LoadASCII loads ASCII art from a file and returns it as a string
-func LoadASCII(path string) (string, error) {
+func LoadASCII(path string) string {
 	content, err := os.ReadFile(path)
 	if err != nil {
-		return "", fmt.Errorf("failed to read file %s: %w", path, err)
+		panic(fmt.Sprintf("Failed to load %s: %v", path, err))
+		return ""
 	}
-	return string(content), nil
+	return string(content)
 }
 
 // LoadEncouragements loads a slice of lines from a text file
@@ -63,22 +67,24 @@ func StartBlinking(app *tview.Application, waifuArt *tview.TextView,
 			case <-stop:
 				return
 			case <-ticker.C:
+				// Decrease Happiness
+				DecreaseHappiness(1)
 				// Show blink frame
 				blinkText := *blinkHead + "\n" + *body
-				if blinkText != last {
-					app.QueueUpdateDraw(func() {
+				if blinkText != last && UIEventsChan != nil {
+					UIEventsChan <- func() {
 						waifuArt.SetText(blinkText)
-					})
+					}
 					last = blinkText
 				}
 
 				// Restore normal frame after short delay
 				normalText := *head + "\n" + *body
 				go time.AfterFunc(200*time.Millisecond, func() {
-					if normalText != last {
-						app.QueueUpdateDraw(func() {
+					if normalText != last && UIEventsChan != nil {
+						UIEventsChan <- func() {
 							waifuArt.SetText(normalText)
-						})
+						}
 						last = normalText
 					}
 				})

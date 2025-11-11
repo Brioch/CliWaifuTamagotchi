@@ -78,6 +78,7 @@ CliWaifuTamagotchi/
 ├── README.md
 ├── LICENSE
 ├── .gitignore
+├── result.gif
 ├── go.mod
 ├── go.sum
 ├── launch.go                       # Main file that launches the project
@@ -92,6 +93,7 @@ CliWaifuTamagotchi/
 └── utils/
     ├── app-utils.go                # Main helpers
     ├── commands-utils.go           # Functions for the Action Space
+    ├── happiness.go                # Happiness scoring system
     └── palette-utils.go            # Functions about the color-palette
 ```
 
@@ -104,7 +106,7 @@ CliWaifuTamagotchi/
 * Loads ASCII **head, blink frames, and body**.
 * Displays **actions menu**: Encourage, Dress Up, Quit.
 * Handles **user input** (keys and navigation).
-* Queues UI updates safely using `app.QueueUpdateDraw`.
+* Queues UI updates safely using `app.QueueUpdateDraw` via `UIEventsChan` that keeps UI changes in order.
 
 ### **utils/app-utils.go**
 

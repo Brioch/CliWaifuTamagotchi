@@ -29,18 +29,23 @@ func Encourage(app *tview.Application, waifuArt, chatBox *tview.TextView,
 		line := encouragements[rand.Intn(len(encouragements))]
 
 		// Show happy face + message
-		app.QueueUpdateDraw(func() {
-			chatBox.SetText("Waifu: " + line)
-			waifuArt.SetText(happyHead + "\n" + body)
-		})
+		if UIEventsChan != nil {
+			UIEventsChan <- func() {
+				chatBox.SetText("Waifu: " + line)
+				waifuArt.SetText(happyHead + "\n" + body)
+				IncreaseHappiness(2)
+			}
+		}
 
 		time.Sleep(duration)
 
 		// Restore neutral
-		app.QueueUpdateDraw(func() {
-			waifuArt.SetText(head + "\n" + body)
-			unlockFunc()
-		})
+		if UIEventsChan != nil {
+			UIEventsChan <- func() {
+				waifuArt.SetText(head + "\n" + body)
+				unlockFunc()
+			}
+		}
 	}()
 }
 
@@ -59,9 +64,11 @@ func DressUp(app *tview.Application, waifuArt, chatBox *tview.TextView,
 	currentBody *string) {
 
 	if len(clothesCache) == 0 {
-		app.QueueUpdateDraw(func() {
-			chatBox.SetText("No clothes found!")
-		})
+		if UIEventsChan != nil {
+			UIEventsChan <- func() {
+				chatBox.SetText("No clothes found!")
+			}
+		}
 		return
 	}
 
@@ -70,9 +77,14 @@ func DressUp(app *tview.Application, waifuArt, chatBox *tview.TextView,
 	for _, item := range clothesCache {
 		display := "-" + item.Name
 		list.AddItem(display, "", 0, func() {
-			*currentBody = item.Data
-			waifuArt.SetText(head + "\n" + *currentBody)
-			chatBox.SetText("Waifu changed into: " + item.Name)
+			if UIEventsChan != nil {
+				UIEventsChan <- func() {
+					*currentBody = item.Data
+					waifuArt.SetText(head + "\n" + *currentBody)
+					chatBox.SetText("Waifu changed into: " + item.Name)
+					IncreaseHappiness(1)
+				}
+			}
 
 			closeDressUp(app, grid, list, actionSpace, waifuArt, head, blinkHead, currentBody)
 		})
@@ -85,7 +97,7 @@ func DressUp(app *tview.Application, waifuArt, chatBox *tview.TextView,
 
 	// Swap in the dress-up list
 	grid.RemoveItem(actionSpace)
-	grid.AddItem(list, 0, 0, 2, 1, 0, 0, true)
+	grid.AddItem(list, 0, 0, 1, 1, 0, 0, true)
 	app.SetFocus(list)
 }
 
@@ -118,10 +130,7 @@ func LoadClothes(dir string) error {
 	}, len(files))
 
 	for i, f := range files {
-		data, err := LoadASCII(f)
-		if err != nil {
-			return fmt.Errorf("failed to load %s: %w", f, err)
-		}
+		data := LoadASCII(f)
 		clothesCache[i] = struct {
 			Name string
 			Data string
@@ -138,6 +147,6 @@ func closeDressUp(app *tview.Application, grid *tview.Grid, list *tview.List,
 	head, blinkHead string, currentBody *string) {
 
 	grid.RemoveItem(list)
-	grid.AddItem(actionSpace, 0, 0, 2, 1, 0, 0, true)
+	grid.AddItem(actionSpace, 0, 0, 1, 1, 0, 0, true)
 	app.SetFocus(actionSpace)
 }

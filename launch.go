@@ -23,24 +23,16 @@ type Assets struct {
 
 // Load all ASCII and text assets
 func loadAssets() (*Assets, error) {
-	load := func(path string) string {
-		data, err := utils.LoadASCII(path)
-		if err != nil {
-			panic(fmt.Sprintf("Failed to load %s: %v", path, err))
-		}
-		return data
-	}
-
 	encouragements, err := utils.LoadEncouragements("assets/words-of-encouragement.txt")
 	if err != nil {
 		return nil, fmt.Errorf("could not load encouragements: %v", err)
 	}
 
 	return &Assets{
-		head:           load("ascii-arts/expressions/neutral"),
-		headBlink:      load("ascii-arts/expressions/neutral-blink"),
-		happyHead:      load("ascii-arts/expressions/-happy"),
-		body:           load("ascii-arts/clothes/seifuku"),
+		head:           utils.LoadASCII("ascii-arts/expressions/neutral"),
+		headBlink:      utils.LoadASCII("ascii-arts/expressions/neutral-blink"),
+		happyHead:      utils.LoadASCII("ascii-arts/expressions/-happy"),
+		body:           utils.LoadASCII("ascii-arts/clothes/seifuku"),
 		encouragements: encouragements,
 	}, nil
 }
@@ -49,11 +41,12 @@ func loadAssets() (*Assets, error) {
 // UI CREATION
 // ==============================
 type UI struct {
-	app         *tview.Application
-	actionSpace *tview.List
-	waifuArt    *tview.TextView
-	chatBox     *tview.TextView
-	grid        *tview.Grid
+	app          *tview.Application
+	actionSpace  *tview.List
+	happinessBar *tview.TextView
+	waifuArt     *tview.TextView
+	chatBox      *tview.TextView
+	grid         *tview.Grid
 	stopBlink   chan bool
 }
 
@@ -61,8 +54,13 @@ func createUI(assets *Assets) *UI {
 	app := tview.NewApplication()
 
 	actionSpace := tview.NewList()
-	actionSpace.SetTitle("| Action Space |").SetBorder(true)
-	
+	actionSpace.SetBorder(true).SetTitle("| Action Space |")
+
+	happinessBar := tview.NewTextView().
+		SetDynamicColors(true).
+		SetTextAlign(tview.AlignCenter)
+	happinessBar.SetBorder(true).SetTitle("| Happiness Bar |")
+
 	waifuArt := tview.NewTextView().
 		SetDynamicColors(true).
 		SetTextAlign(tview.AlignCenter)
@@ -78,17 +76,18 @@ func createUI(assets *Assets) *UI {
 		SetRows(0, 3).
 		SetColumns(40, 0).
 		SetBorders(false).
-		AddItem(actionSpace, 0, 0, 2, 1, 0, 0, true).
-		AddItem(waifuArt, 0, 1, 1, 1, 0, 75, false).
-		AddItem(chatBox, 1, 1, 1, 1, 0, 0, false)
+		AddItem(actionSpace,  0, 0, 1, 1, 0, 0, true).
+		AddItem(happinessBar, 1, 0, 1, 1, 0, 0, false).
+		AddItem(waifuArt,     0, 1, 1, 1, 0, 75, false).
+		AddItem(chatBox,      1, 1, 1, 1, 0, 0, false)
 
-	return &UI{app, actionSpace, waifuArt, chatBox, grid, make(chan bool)}
+	return &UI{app, actionSpace, happinessBar, waifuArt, chatBox, grid, make(chan bool)}
 }
 
 // ==============================
-// MENU SETUP
+// ACTION SPACE SETUP
 // ==============================
-func setupMenu(ui *UI, assets *Assets, encourageLocked *bool, currentBody *string) {
+func setupActionSpace(ui *UI, assets *Assets, encourageLocked *bool, currentBody *string) {
 	ui.actionSpace.AddItem("Encourage", "Get a nice message.", '1', func() {
 		if !*encourageLocked {
 			*encourageLocked = true
@@ -149,18 +148,32 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	utils.HeadASCII      = &assets.head
+	utils.BlinkHeadASCII = &assets.headBlink
 
 	// ===== Set UI up
 	// =====
 	ui := createUI(assets)
+	// Channel to handle UI changes withouterrors
+	uiEvents := make(chan func(), 20)
+	go func() {
+		for fn := range uiEvents {
+			ui.app.QueueUpdateDraw(fn)
+		}
+	}()
+	utils.UIEventsChan = uiEvents
+	// Create hapiness bar's variable
+	utils.HappinessBarRef = ui.happinessBar
+	utils.GetHappinessBar()
+	ui.happinessBar.SetText(utils.CurrentBar)
 	// Get the palette
 	palette, err := utils.LoadPalette()
 	if err != nil {
 		panic(fmt.Sprintf("Failed to load palette: %v", err))
 	}
-	// Apply to TextViews
-	utils.ApplyTextViewPalette(palette, ui.waifuArt, ui.chatBox)
-	// Apply to Lists
+	// Apply palette to TextViews
+	utils.ApplyTextViewPalette(palette, ui.happinessBar, ui.waifuArt, ui.chatBox)
+	// Apply palette to Lists
 	utils.ApplyListPalette(palette, ui.actionSpace)
 
 	// ===== Variable work
@@ -170,7 +183,7 @@ func main() {
 
 	// ===== Set functions
 	// =====
-	setupMenu(ui, assets, &encourageLocked, &currentBody)
+	setupActionSpace(ui, assets, &encourageLocked, &currentBody)
 	setGlobalKeys(ui, assets, &encourageLocked, &currentBody)
 
 	// ===== Auto processes
