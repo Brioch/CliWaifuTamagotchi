@@ -30,7 +30,7 @@ var (
 )
 
 func setExpression(head, blink string) {
-	if HeadASCII != nil && BlinkHeadASCII != nil {
+	if HeadASCII != nil && BlinkHeadASCII != nil && *HeadASCII != head {
 		*HeadASCII = head
 		*BlinkHeadASCII = blink
 	}

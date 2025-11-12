@@ -88,7 +88,7 @@ func createUI(assets *Assets) *UI {
 // ACTION SPACE SETUP
 // ==============================
 func setupActionSpace(ui *UI, assets *Assets, encourageLocked *bool, currentBody *string) {
-	ui.actionSpace.AddItem("Encourage", "Get a nice message.", '1', func() {
+	ui.actionSpace.AddItem("Encourage", "  Get a nice message.", '1', func() {
 		if !*encourageLocked {
 			*encourageLocked = true
 			utils.Encourage(ui.app, ui.waifuArt, ui.chatBox,
@@ -98,14 +98,19 @@ func setupActionSpace(ui *UI, assets *Assets, encourageLocked *bool, currentBody
 		}
 	})
 
-	ui.actionSpace.AddItem("Dress Up", "Change her outfit.", '2', func() {
-
-		utils.DressUp(ui.app, ui.waifuArt, ui.chatBox,
-			assets.head, assets.headBlink,
-			ui.grid, ui.actionSpace, currentBody)
+	ui.actionSpace.AddItem("Dress Up", "  Change her outfit.", '2', func() {
+		if !utils.LockGridChanges {
+			utils.DressUp(ui.app, ui.waifuArt, ui.chatBox,
+				assets.head, assets.headBlink,
+				ui.grid, ui.actionSpace, currentBody)
+		}
 	})
 
-	ui.actionSpace.AddItem("Quit", "Exit the application.", 'q', func() {
+	ui.actionSpace.AddItem("Background Mode", "  Remove odd TUI", 'b', func() {
+		utils.BackgroundMode(ui.app, ui.waifuArt, ui.chatBox, ui.happinessBar, ui.grid, ui.actionSpace, currentBody)
+	})
+
+	ui.actionSpace.AddItem("Quit", "  Exit the application.", 'q', func() {
 		ui.app.Stop()
 	})
 }
@@ -126,9 +131,14 @@ func setGlobalKeys(ui *UI, assets *Assets, encourageLocked *bool, currentBody *s
 			}
 			return nil
 		case '2':
-			utils.DressUp(ui.app, ui.waifuArt, ui.chatBox,
-				assets.head, assets.headBlink,
-				ui.grid, ui.actionSpace, currentBody)
+			if utils.LockGridChanges == false {
+				utils.DressUp(ui.app, ui.waifuArt, ui.chatBox,
+					assets.head, assets.headBlink,
+					ui.grid, ui.actionSpace, currentBody)
+			}
+			return nil
+		case 'b':
+			utils.BackgroundMode(ui.app, ui.waifuArt, ui.chatBox, ui.happinessBar, ui.grid, ui.actionSpace, currentBody)
 			return nil
 		case 'q':
 			ui.app.Stop()
@@ -154,7 +164,7 @@ func main() {
 	// ===== Set UI up
 	// =====
 	ui := createUI(assets)
-	// Channel to handle UI changes withouterrors
+	// Channel to handle UI changes without errors
 	uiEvents := make(chan func(), 20)
 	go func() {
 		for fn := range uiEvents {
@@ -162,10 +172,13 @@ func main() {
 		}
 	}()
 	utils.UIEventsChan = uiEvents
-	// Create hapiness bar's variable
+	// Create happiness bar's variable
 	utils.HappinessBarRef = ui.happinessBar
 	utils.GetHappinessBar()
 	ui.happinessBar.SetText(utils.CurrentBar)
+
+	// ===== Set palette up
+	// =====
 	// Get the palette
 	palette, err := utils.LoadPalette()
 	if err != nil {
@@ -175,6 +188,18 @@ func main() {
 	utils.ApplyTextViewPalette(palette, ui.happinessBar, ui.waifuArt, ui.chatBox)
 	// Apply palette to Lists
 	utils.ApplyListPalette(palette, ui.actionSpace)
+
+	// ===== Set settings up
+	// =====
+	// Get the settings
+	settings, err := utils.LoadSettings()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to load settings: %v", err))
+	}
+	// Apply Waifu's name
+	ui.waifuArt.SetTitle("| " + settings.Name + " |")
+	// Apply deafult message in ChatBox
+	ui.chatBox.SetText(settings.DefaultMessage)
 
 	// ===== Variable work
 	// =====

@@ -1,6 +1,9 @@
 # 🫂 CliWaifuTamagotchi
 
+Preview:
 ![Result](result.gif)
+---
+![Reactions](reactions.jpg)
 
 ![Repo size](https://img.shields.io/github/repo-size/HenryLoM/CliWaifuTamagotchi?color=lightgrey)
 ![Commits](https://img.shields.io/github/commit-activity/t/HenryLoM/CliWaifuTamagotchi/main?color=blue)
@@ -10,14 +13,15 @@
 ## 📑 Table of Contents
 - [✨ Overview](#-overview)
 - [🎬 Launching Process](#-launching-process)
+- [🎨 Customization](#-customization)
 - [📂 Project Structure](#-project-structure)
 - [⚙️ Core Scripts](#-core-scripts)
     - [launch.go](#launchgo)
     - [utils/app-utils.go](#utilsapp-utilsgo)
     - [utils/commands-utils.go](#utilscommands-utilsgo)
+    - [utils/happiness.go](#utilshappinessgo)
     - [utils/palette-utils.go](#utilspalette-utilsgo)
-- [🎨 Customization](#-customization)
-- [🛠️ Settings & Customization](#-settings--customization)
+    - [utils/settings.go](#utilssettingsgo)
 - [📜 Notes](#-notes)
 
 ---
@@ -65,8 +69,36 @@ go run launch.go
 
 > **💡 Notes**
 >
-> * First run creates `~/.config/cliwaifutamagotchi/palette.json` if missing.
+> * First run creates `~/.config/cliwaifutamagotchi/palette.json` on its own if missing.
 > * On macOS, ensure your terminal supports **true color** for best rendering.
+
+---
+
+## 🎨 Customization
+
+1. Palette<br>
+JSON file is in `~/.config/cliwaifutamagotchi/` ; Named `palette.json`<br>
+JSON file's structure:
+```
+{
+  "background": "#1e1e2e",
+  "foreground": "#cdd6f4",
+  "border": "#cba6f7",
+  "accent": "#eba0ac",
+  "title": "#b4befe"
+}
+```
+> Note: default palette is Catppuchin (Mocha)
+
+2. Settings<br>
+JSON file is in `~/.config/cliwaifutamagotchi/` ; Named `settings.json`<br>
+JSON file's structure:
+```
+{
+  "name": "Waifu"
+  "defaultMessage": "..."
+}
+```
 
 ---
 
@@ -79,6 +111,7 @@ CliWaifuTamagotchi/
 ├── LICENSE
 ├── .gitignore
 ├── result.gif
+├── reactions.jpg
 ├── go.mod
 ├── go.sum
 ├── launch.go                       # Main file that launches the project
@@ -94,7 +127,8 @@ CliWaifuTamagotchi/
     ├── app-utils.go                # Main helpers
     ├── commands-utils.go           # Functions for the Action Space
     ├── happiness.go                # Happiness scoring system
-    └── palette-utils.go            # Functions about the color-palette
+    ├── palette-utils.go            # Handling palette out of the file
+    └── settings.go                 # Handling settings out of the file
 ```
 
 ---
@@ -119,7 +153,13 @@ CliWaifuTamagotchi/
 
   * `Encourage`: random encouraging phrase + happy frame.
   * `DressUp`: swaps body/outfit based on selection.
+  * `BackgroundMode`: fills the TUI with Waifu, removing all of the odd elements.
 * Caches **clothes in memory** to reduce disk reads.
+
+### **utils/happiness.go**
+
+* Handles the bar and changes emotions of the avatar.
+* Handles the happiness scores.
 
 ### **utils/palette-utils.go**
 
@@ -127,22 +167,10 @@ CliWaifuTamagotchi/
 * Creates **default palette** if missing.
 * Provides **color application** helpers.
 
----
+### **utils/settings.go**
 
-## 🎨 Customization
-
-JSON file is in `~/.config/cliwaifutamagotchi/` ; Named `palette.json`<br>
-JSON file's structure:
-```
-{
-  "background": "#1e1e2e",
-  "foreground": "#cdd6f4",
-  "border": "#cba6f7",
-  "accent": "#eba0ac",
-  "title": "#b4befe"
-}
-```
-> Note: default palette is Catppuchin (Mocha)
+* Loads settings from `~/.config/cliwaifutamagotchi/palette.json`.
+* Creates **default settings** if missing.
 
 ---
 

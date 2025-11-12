@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/rivo/tview"
+	"github.com/gdamore/tcell/v2"
 )
 
 // ==============================
@@ -140,7 +141,6 @@ func LoadClothes(dir string) error {
 	return nil
 }
 
-
 // closeDressUp restores the actionSpace and restarts blinking
 func closeDressUp(app *tview.Application, grid *tview.Grid, list *tview.List,
 	actionSpace *tview.List, waifuArt *tview.TextView,
@@ -149,4 +149,53 @@ func closeDressUp(app *tview.Application, grid *tview.Grid, list *tview.List,
 	grid.RemoveItem(list)
 	grid.AddItem(actionSpace, 0, 0, 1, 1, 0, 0, true)
 	app.SetFocus(actionSpace)
+}
+
+
+// ==============================
+// BACKGROUND MODE
+// ==============================
+
+var LockGridChanges bool = false
+
+// BackgroundMode makes the UI focus only on the waifuArt view
+func BackgroundMode(app *tview.Application, waifuArt, chatBox, happinessBar *tview.TextView,
+	grid *tview.Grid, actionSpace *tview.List, currentBody *string) {
+
+	// Block some keys
+	LockGridChanges = true
+
+	// Remove odds and show waifuArt only
+	grid.RemoveItem(actionSpace)
+	grid.RemoveItem(happinessBar)
+	grid.RemoveItem(chatBox)
+	grid.RemoveItem(waifuArt)
+
+	grid.AddItem(waifuArt, 0, 0, 2, 2, 0, 34, true)
+	app.SetFocus(waifuArt)
+
+	// Output Handler (Esc)
+	waifuArt.SetDoneFunc(func(key tcell.Key) {
+		if key == tcell.KeyEscape {
+			closeBackground(app, grid, waifuArt, actionSpace, happinessBar, chatBox)
+		}
+	})
+}
+
+// closeBackground restores the previous layout after BackgroundMode
+func closeBackground(app *tview.Application, grid *tview.Grid,
+	waifuArt *tview.TextView, actionSpace *tview.List,
+	happinessBar, chatBox *tview.TextView) {
+
+	grid.RemoveItem(waifuArt)
+
+	grid.AddItem(actionSpace, 0, 0, 1, 1, 0, 0, true)
+	grid.AddItem(happinessBar, 1, 0, 1, 1, 0, 0, false)
+	grid.AddItem(waifuArt, 0, 1, 1, 1, 0, 75, false)
+	grid.AddItem(chatBox, 1, 1, 1, 1, 0, 0, false)
+
+	app.SetFocus(actionSpace)
+	waifuArt.SetDoneFunc(nil)
+	
+	LockGridChanges = false
 }
