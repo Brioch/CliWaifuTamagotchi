@@ -13,6 +13,7 @@ import (
 type Settings struct {
 	Name           string `json:"name"`
 	DefaultMessage string `json:"defaultMessage"`
+	VimNavigation  bool   `json:"vimNavigation"`
 }
 
 var cachedSettings *Settings
@@ -24,6 +25,7 @@ func DefaultSettings() *Settings {
 	return &Settings{
 		Name:           "Waifu",
 		DefaultMessage: "...",
+		VimNavigation:  false,
 	}
 }
 

@@ -118,7 +118,7 @@ func setupActionSpace(ui *UI, assets *Assets, encourageLocked *bool, currentBody
 // ==============================
 // GLOBAL KEYS
 // ==============================
-func setGlobalKeys(ui *UI, assets *Assets, encourageLocked *bool, currentBody *string) {
+func setGlobalKeys(ui *UI, assets *Assets, encourageLocked *bool, currentBody *string, settings *utils.Settings) {
 	ui.app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Rune() {
 		case '1':
@@ -144,6 +144,43 @@ func setGlobalKeys(ui *UI, assets *Assets, encourageLocked *bool, currentBody *s
 			ui.app.Stop()
 			return nil
 		}
+
+		// Vim-like navigation works for any focused list
+		if settings.VimNavigation {
+			if focusedPrimitive := ui.app.GetFocus(); focusedPrimitive != nil {
+				// Check if the focused primitive is a list to enable vim navigation
+				if list, ok := focusedPrimitive.(*tview.List); ok {
+					switch event.Rune() {
+					case 'j':
+						// Move down in the list
+						currentItem := list.GetCurrentItem()
+						if currentItem < list.GetItemCount()-1 {
+							list.SetCurrentItem(currentItem + 1)
+						}
+						return nil
+					case 'k':
+						// Move up in the list
+						currentItem := list.GetCurrentItem()
+						if currentItem > 0 {
+							list.SetCurrentItem(currentItem - 1)
+						}
+						return nil
+					case 'l':
+						// Select the current item
+						currentIndex := list.GetCurrentItem()
+						if currentIndex >= 0 && currentIndex < list.GetItemCount() {
+							// Simulate Enter key to trigger the selected function
+							return tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModNone)
+						}
+						return nil
+					case 'h':
+						// Go back/escape
+						return tcell.NewEventKey(tcell.KeyEscape, 0, tcell.ModNone)
+					}
+				}
+			}
+		}
+
 		return event
 	})
 }
@@ -209,7 +246,7 @@ func main() {
 	// ===== Set functions
 	// =====
 	setupActionSpace(ui, assets, &encourageLocked, &currentBody)
-	setGlobalKeys(ui, assets, &encourageLocked, &currentBody)
+	setGlobalKeys(ui, assets, &encourageLocked, &currentBody, settings)
 
 	// ===== Auto processes
 	// =====
