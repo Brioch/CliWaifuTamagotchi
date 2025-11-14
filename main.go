@@ -18,21 +18,28 @@ type Assets struct {
 	headBlink      string
 	happyHead      string
 	winkHead       string
+	sadHead        string
 	body           string
 	encouragements []string
 	flirts         []string
+	arousalMessages []string
 }
 
 // Load all ASCII and text assets
 func loadAssets() (*Assets, error) {
-	encouragements, err := utils.LoadEncouragements("assets/words-of-encouragement.txt")
+	encouragements, err := utils.LoadMessages("assets/words-of-encouragement.txt")
 	if err != nil {
 		return nil, fmt.Errorf("could not load encouragements: %v", err)
 	}
 
-	flirts, err := utils.LoadFlirts("assets/words-of-flirt.txt")
+	flirts, err := utils.LoadMessages("assets/words-of-flirt.txt")
 	if err != nil {
 		return nil, fmt.Errorf("could not load flirts: %v", err)
+	}
+
+	arousalMessages, err := utils.LoadMessages("assets/words-of-arousal.txt")
+	if err != nil {
+		return nil, fmt.Errorf("could not load arousal messages: %v", err)
 	}
 
 	return &Assets{
@@ -40,9 +47,11 @@ func loadAssets() (*Assets, error) {
 		headBlink:      utils.LoadASCII("ascii-arts/expressions/neutral-blink"),
 		happyHead:      utils.LoadASCII("ascii-arts/expressions/-happy"),
 		winkHead:      utils.LoadASCII("ascii-arts/expressions/wink"),
+		sadHead:        utils.LoadASCII("ascii-arts/expressions/sad"),
 		body:           utils.LoadASCII("ascii-arts/clothes/seifuku"),
 		encouragements: encouragements,
 		flirts:         flirts,
+		arousalMessages: arousalMessages,
 	}, nil
 }
 
@@ -53,6 +62,7 @@ type UI struct {
 	app          *tview.Application
 	actionSpace  *tview.List
 	happinessBar *tview.TextView
+	arousalBar   *tview.TextView
 	waifuArt     *tview.TextView
 	chatBox      *tview.TextView
 	grid         *tview.Grid
@@ -70,6 +80,11 @@ func createUI(assets *Assets) *UI {
 		SetTextAlign(tview.AlignCenter)
 	happinessBar.SetBorder(true).SetTitle("| Happiness Bar |")
 
+	arousalBar := tview.NewTextView().
+		SetDynamicColors(true).
+		SetTextAlign(tview.AlignCenter)
+	arousalBar.SetBorder(true).SetTitle("| Arousal Bar |")
+
 	waifuArt := tview.NewTextView().
 		SetDynamicColors(true).
 		SetTextAlign(tview.AlignCenter)
@@ -82,15 +97,16 @@ func createUI(assets *Assets) *UI {
 	chatBox.SetBorder(true).SetTitle("| Chatbox |")
 
 	grid := tview.NewGrid().
-		SetRows(0, 3).
+		SetRows(0, 3, 3).
 		SetColumns(40, 0).
 		SetBorders(false).
 		AddItem(actionSpace,  0, 0, 1, 1, 0, 0, true).
 		AddItem(happinessBar, 1, 0, 1, 1, 0, 0, false).
+		AddItem(arousalBar,   2, 0, 1, 1, 0, 0, false).
 		AddItem(waifuArt,     0, 1, 1, 1, 0, 75, false).
-		AddItem(chatBox,      1, 1, 1, 1, 0, 0, false)
+		AddItem(chatBox,      1, 1, 2, 1, 0, 0, false)
 
-	return &UI{app, actionSpace, happinessBar, waifuArt, chatBox, grid, make(chan bool)}
+	return &UI{app, actionSpace, happinessBar, arousalBar, waifuArt, chatBox, grid, make(chan bool)}
 }
 
 // ==============================
@@ -125,8 +141,30 @@ func setupActionSpace(ui *UI, assets *Assets, encourageLocked *bool, currentBody
 		}
 	})
 
+	ui.actionSpace.AddItem("Headpat", "  Give her a headpat.", rune(keys.Headpat[0]), func() {
+		if !*encourageLocked {
+			*encourageLocked = true
+			utils.Headpat(ui.app, ui.waifuArt, ui.chatBox,
+				assets.head, assets.happyHead, *currentBody,
+				1*time.Second,
+				func() { *encourageLocked = false })
+		}
+	})
+
+	// Store the H Scene index and prepare selected func
+	utils.HSceneActionIndex = ui.actionSpace.GetItemCount()
+	utils.HSceneSelectedFunc = func() {
+		if !*encourageLocked {
+			*encourageLocked = true
+			utils.HScene(ui.app, ui.waifuArt, ui.chatBox,
+				assets.head, assets.sadHead, *currentBody,
+				1*time.Second,
+				func() { *encourageLocked = false })
+		}
+	}
+
 	ui.actionSpace.AddItem("Background Mode", "  Remove all odd TUI.", rune(keys.BackgroundMode[0]), func() {
-		utils.BackgroundMode(ui.app, ui.waifuArt, ui.chatBox, ui.happinessBar, ui.grid, ui.actionSpace, currentBody)
+		utils.BackgroundMode(ui.app, ui.waifuArt, ui.chatBox, ui.happinessBar, ui.arousalBar, ui.grid, ui.actionSpace, currentBody)
 	})
 
 	ui.actionSpace.AddItem("Quit", "  Exit the application.", rune(keys.Quit[0]), func() {
@@ -165,8 +203,26 @@ func setGlobalKeys(ui *UI, assets *Assets, encourageLocked *bool, currentBody *s
 					ui.grid, ui.actionSpace, currentBody)
 			}
 			return nil
+		case rune(keys.Headpat[0]):
+			if !*encourageLocked {
+				*encourageLocked = true
+				utils.Headpat(ui.app, ui.waifuArt, ui.chatBox,
+					assets.head, assets.happyHead, *currentBody,
+					1*time.Second,
+					func() { *encourageLocked = false })
+			}
+			return nil
+		case rune(keys.HScene[0]):
+			if !*encourageLocked {
+				*encourageLocked = true
+				utils.HScene(ui.app, ui.waifuArt, ui.chatBox,
+					assets.head, assets.happyHead, *currentBody,
+					1*time.Second,
+					func() { *encourageLocked = false })
+			}
+			return nil
 		case rune(keys.BackgroundMode[0]):
-			utils.BackgroundMode(ui.app, ui.waifuArt, ui.chatBox, ui.happinessBar, ui.grid, ui.actionSpace, currentBody)
+			utils.BackgroundMode(ui.app, ui.waifuArt, ui.chatBox, ui.happinessBar, ui.arousalBar, ui.grid, ui.actionSpace, currentBody)
 			return nil
 		case rune(keys.Quit[0]):
 			ui.app.Stop()
@@ -237,10 +293,17 @@ func main() {
 		}
 	}()
 	utils.UIEventsChan = uiEvents
+	utils.ChatBoxRef = ui.chatBox
+	utils.ActionSpaceRef = ui.actionSpace
 	// Create happiness bar's variable
 	utils.HappinessBarRef = ui.happinessBar
 	utils.GetHappinessBar()
 	ui.happinessBar.SetText(utils.CurrentBar)
+	// Create arousal bar's variable
+	utils.ArousalBarRef = ui.arousalBar
+	utils.ArousalMessages = assets.arousalMessages
+	utils.GetArousalBar()
+	ui.arousalBar.SetText(utils.CurrentArousalBar)
 
 	// ===== Set palette up
 	// =====
@@ -250,7 +313,7 @@ func main() {
 		panic(fmt.Sprintf("Failed to load palette: %v", err))
 	}
 	// Apply palette to TextViews
-	utils.ApplyTextViewPalette(palette, ui.happinessBar, ui.waifuArt, ui.chatBox)
+	utils.ApplyTextViewPalette(palette, ui.happinessBar, ui.arousalBar, ui.waifuArt, ui.chatBox)
 	// Apply palette to Lists
 	utils.ApplyListPalette(palette, ui.actionSpace)
 

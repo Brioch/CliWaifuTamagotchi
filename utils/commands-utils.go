@@ -34,6 +34,7 @@ func Encourage(app *tview.Application, waifuArt, chatBox *tview.TextView,
 				chatBox.SetText("Waifu: " + line)
 				waifuArt.SetText(happyHead + "\n" + body)
 				IncreaseHappiness(6)
+				IncreaseArousal(2)
 			}
 		}
 
@@ -73,6 +74,38 @@ func Flirt(app *tview.Application, waifuArt, chatBox *tview.TextView,
 				chatBox.SetText("Waifu: " + line)
 				waifuArt.SetText(flirtHead + "\n" + body)
 				IncreaseHappiness(8)
+				IncreaseArousal(5)
+			}
+		}
+
+		time.Sleep(duration)
+
+		// Restore neutral
+		if UIEventsChan != nil {
+			UIEventsChan <- func() {
+				waifuArt.SetText(head + "\n" + body)
+				unlockFunc()
+			}
+		}
+	}()
+}
+
+// ==============================
+// HEADPAT
+// ==============================
+
+// Headpat shows a happy face and increases arousal
+func Headpat(app *tview.Application, waifuArt, chatBox *tview.TextView,
+	head, happyHead, body string,
+	duration time.Duration, unlockFunc func()) {
+
+	go func() {
+		// Show happy face + message
+		if UIEventsChan != nil {
+			UIEventsChan <- func() {
+				chatBox.SetText("Waifu: *purrs*")
+				waifuArt.SetText(happyHead + "\n" + body)
+				IncreaseArousal(100)
 			}
 		}
 
@@ -122,6 +155,7 @@ func DressUp(app *tview.Application, waifuArt, chatBox *tview.TextView,
 					waifuArt.SetText(head + "\n" + *currentBody)
 					chatBox.SetText("Waifu changed into: " + item.Name)
 					IncreaseHappiness(3)
+					IncreaseArousal(1)
 				}
 			}
 
@@ -215,7 +249,7 @@ func closeDressUp(app *tview.Application, grid *tview.Grid, list *tview.List,
 var LockGridChanges bool = false
 
 // BackgroundMode makes the UI focus only on the waifuArt view
-func BackgroundMode(app *tview.Application, waifuArt, chatBox, happinessBar *tview.TextView,
+func BackgroundMode(app *tview.Application, waifuArt, chatBox, happinessBar, arousalBar *tview.TextView,
 	grid *tview.Grid, actionSpace *tview.List, currentBody *string) {
 
 	// Block some keys
@@ -224,6 +258,7 @@ func BackgroundMode(app *tview.Application, waifuArt, chatBox, happinessBar *tvi
 	// Remove odds and show waifuArt only
 	grid.RemoveItem(actionSpace)
 	grid.RemoveItem(happinessBar)
+	grid.RemoveItem(arousalBar)
 	grid.RemoveItem(chatBox)
 	grid.RemoveItem(waifuArt)
 
@@ -233,7 +268,7 @@ func BackgroundMode(app *tview.Application, waifuArt, chatBox, happinessBar *tvi
 	// Output Handler (Esc)
 	waifuArt.SetDoneFunc(func(key tcell.Key) {
 		if key == tcell.KeyEscape {
-			closeBackground(app, grid, waifuArt, actionSpace, happinessBar, chatBox)
+			closeBackground(app, grid, waifuArt, actionSpace, happinessBar, arousalBar, chatBox)
 		}
 	})
 }
@@ -241,17 +276,49 @@ func BackgroundMode(app *tview.Application, waifuArt, chatBox, happinessBar *tvi
 // closeBackground restores the previous layout after BackgroundMode
 func closeBackground(app *tview.Application, grid *tview.Grid,
 	waifuArt *tview.TextView, actionSpace *tview.List,
-	happinessBar, chatBox *tview.TextView) {
+	happinessBar, arousalBar, chatBox *tview.TextView) {
 
 	grid.RemoveItem(waifuArt)
 
 	grid.AddItem(actionSpace, 0, 0, 1, 1, 0, 0, true)
 	grid.AddItem(happinessBar, 1, 0, 1, 1, 0, 0, false)
-	grid.AddItem(waifuArt, 0, 1, 1, 1, 0, 75, false)
-	grid.AddItem(chatBox, 1, 1, 1, 1, 0, 0, false)
+	grid.AddItem(arousalBar, 2, 0, 1, 1, 0, 0, false)
+	grid.AddItem(waifuArt, 0, 1, 3, 1, 0, 75, false)
+	grid.AddItem(chatBox, 3, 1, 1, 1, 0, 0, false)
 
 	app.SetFocus(actionSpace)
 	waifuArt.SetDoneFunc(nil)
 
 	LockGridChanges = false
+}
+
+// ==============================
+// H SCENE
+// ==============================
+
+// HScene shows a sad face and decreases arousal
+func HScene(app *tview.Application, waifuArt, chatBox *tview.TextView,
+	head, reactionHead, body string,
+	duration time.Duration, unlockFunc func()) {
+
+	go func() {
+		// Show face + message
+		if UIEventsChan != nil {
+			UIEventsChan <- func() {
+				chatBox.SetText("Waifu: H-Kyaa!")
+				waifuArt.SetText(reactionHead + "\n" + body)
+				DecreaseArousal(300)
+			}
+		}
+
+		time.Sleep(duration)
+
+		// Restore neutral
+		if UIEventsChan != nil {
+			UIEventsChan <- func() {
+				waifuArt.SetText(head + "\n" + body)
+				unlockFunc()
+			}
+		}
+	}()
 }

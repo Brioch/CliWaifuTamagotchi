@@ -11,6 +11,22 @@ import (
 
 // Reference to the channel for UI updates
 var UIEventsChan chan func()
+var ChatBoxRef *tview.TextView
+var ActionSpaceRef *tview.List
+var HSceneActionIndex int = -1
+var HSceneSelectedFunc func()
+
+var (
+	HeadASCII      *string // Current head
+	BlinkHeadASCII *string // Current blinking head
+)
+
+func SetExpression(head, blink string) {
+	if HeadASCII != nil && BlinkHeadASCII != nil && *HeadASCII != head {
+		*HeadASCII = head
+		*BlinkHeadASCII = blink
+	}
+}
 
 // ==============================
 // ASCII ART LOADING
@@ -34,28 +50,8 @@ func LoadASCII(path string) string {
 //go:embed assets/**
 var ASSETSFS embed.FS
 
-// LoadEncouragements loads a slice of lines from a text file
-func LoadEncouragements(path string) ([]string, error) {
-	file, err := ASSETSFS.Open(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open %s: %w", path, err)
-	}
-	defer file.Close()
-
-	var lines []string
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("failed reading %s: %w", path, err)
-	}
-
-	return lines, nil
-}
-
-// LoadFlirts loads a slice of lines from a text file
-func LoadFlirts(path string) ([]string, error) {
+// Loads a slice of lines from a text file
+func LoadMessages(path string) ([]string, error) {
 	file, err := ASSETSFS.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open %s: %w", path, err)
@@ -95,8 +91,9 @@ func StartBlinking(app *tview.Application, waifuArt *tview.TextView,
 			case <-stop:
 				return
 			case <-ticker.C:
-				// Decrease Happiness
+				// Decrease Happiness and Arousal
 				DecreaseHappiness(1)
+				DecreaseArousal(1)
 				// Show blink frame
 				blinkText := *blinkHead + "\n" + *body
 				if blinkText != last && UIEventsChan != nil {

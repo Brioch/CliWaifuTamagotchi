@@ -14,6 +14,8 @@ type KeyBindings struct {
     Encourage      string `json:"encourage"`
     Flirt          string `json:"flirt"`
     DressUp        string `json:"dressup"`
+    Headpat        string `json:"headpat"`
+    HScene         string `json:"hscene"`
     BackgroundMode string `json:"backgroundMode"`
     Quit           string `json:"quit"`
 }
@@ -39,6 +41,8 @@ func DefaultSettings() *Settings {
             Encourage:      "1",
             Flirt:          "2",
             DressUp:        "3",
+            Headpat:        "4",
+            HScene:         "h",
             BackgroundMode: "b",
             Quit:           "q",
         },

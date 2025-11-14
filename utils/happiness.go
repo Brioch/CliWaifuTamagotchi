@@ -11,8 +11,6 @@ var (
 	CurrentBar       = ""                   // Place holder for the current bar state
 	happinessMutex   sync.Mutex             // Mutex to protect concurrent access to Happiness
 	HappinessBarRef  *tview.TextView        // Link to the happiness bar itself so we dynamically update it
-	HeadASCII        *string                // Current head
-	BlinkHeadASCII   *string                // Current blinking head
 )
 
 // ==============================
@@ -28,13 +26,6 @@ var (
 	sad           = LoadASCII("ascii-arts/expressions/sad")
 	sadBlink      = LoadASCII("ascii-arts/expressions/sad-blink")
 )
-
-func setExpression(head, blink string) {
-	if HeadASCII != nil && BlinkHeadASCII != nil && *HeadASCII != head {
-		*HeadASCII = head
-		*BlinkHeadASCII = blink
-	}
-}
 
 // ==============================
 // Decrease Happiness
@@ -78,37 +69,37 @@ func GetHappinessBar() {
 	switch {
 	case Happiness > 900:
 		CurrentBar = "██████████"
-		setExpression(neutral, neutralBlink)
+		SetExpression(neutral, neutralBlink)
 	case Happiness > 800:
 		CurrentBar =  "█████████░"
-		setExpression(neutral, neutralBlink)
+		SetExpression(neutral, neutralBlink)
 	case Happiness > 700:
 		CurrentBar =  "████████░░"
-		setExpression(confused, confusedBlink)
+		SetExpression(confused, confusedBlink)
 	case Happiness > 600:
 		CurrentBar =  "███████░░░"
-		setExpression(confused, confusedBlink)
+		SetExpression(confused, confusedBlink)
 	case Happiness > 500:
 		CurrentBar =  "██████░░░░"
-		setExpression(bored, boredBlink)
+		SetExpression(bored, boredBlink)
 	case Happiness > 400:
 		CurrentBar =  "█████░░░░░"
-		setExpression(bored, boredBlink)
+		SetExpression(bored, boredBlink)
 	case Happiness > 300:
 		CurrentBar =  "████░░░░░░"
-		setExpression(bored, boredBlink)
+		SetExpression(bored, boredBlink)
 	case Happiness > 200:
 		CurrentBar =  "███░░░░░░░"
-		setExpression(sad, sadBlink)
+		SetExpression(sad, sadBlink)
 	case Happiness > 100:
 		CurrentBar =  "██░░░░░░░░"
-		setExpression(sad, sadBlink)
+		SetExpression(sad, sadBlink)
 	case Happiness > 0:
 		CurrentBar =  "█░░░░░░░░░"
-		setExpression(sad, sadBlink)
+		SetExpression(sad, sadBlink)
 	default:
 		CurrentBar =  "░░░░░░░░░░"
-		setExpression(sad, sadBlink)
+		SetExpression(sad, sadBlink)
 	}
 }
 
