@@ -54,6 +54,26 @@ func LoadEncouragements(path string) ([]string, error) {
 	return lines, nil
 }
 
+// LoadFlirts loads a slice of lines from a text file
+func LoadFlirts(path string) ([]string, error) {
+	file, err := ASSETSFS.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open %s: %w", path, err)
+	}
+	defer file.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("failed reading %s: %w", path, err)
+	}
+
+	return lines, nil
+}
+
 // ==============================
 // BLINKING WAIFU
 // ==============================

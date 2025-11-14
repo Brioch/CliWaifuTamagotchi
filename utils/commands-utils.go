@@ -50,6 +50,45 @@ func Encourage(app *tview.Application, waifuArt, chatBox *tview.TextView,
 }
 
 // ==============================
+// FLIRT
+// ==============================
+
+// Flirt shows a random flirt message, swaps head for `duration`, then restores
+func Flirt(app *tview.Application, waifuArt, chatBox *tview.TextView,
+	head, flirtHead, body string, flirtMessages []string,
+	duration time.Duration, unlockFunc func()) {
+
+	if len(flirtMessages) == 0 {
+		unlockFunc()
+		return
+	}
+
+	go func() {
+		rand.Seed(time.Now().UnixNano())
+		line := flirtMessages[rand.Intn(len(flirtMessages))]
+
+		// Show flirt face + message
+		if UIEventsChan != nil {
+			UIEventsChan <- func() {
+				chatBox.SetText("Waifu: " + line)
+				waifuArt.SetText(flirtHead + "\n" + body)
+				IncreaseHappiness(8)
+			}
+		}
+
+		time.Sleep(duration)
+
+		// Restore neutral
+		if UIEventsChan != nil {
+			UIEventsChan <- func() {
+				waifuArt.SetText(head + "\n" + body)
+				unlockFunc()
+			}
+		}
+	}()
+}
+
+// ==============================
 // DRESS-UP
 // ==============================
 

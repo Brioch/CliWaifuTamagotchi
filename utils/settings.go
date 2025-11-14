@@ -12,6 +12,7 @@ import (
 // ==============================
 type KeyBindings struct {
     Encourage      string `json:"encourage"`
+    Flirt          string `json:"flirt"`
     DressUp        string `json:"dressup"`
     BackgroundMode string `json:"backgroundMode"`
     Quit           string `json:"quit"`
@@ -36,7 +37,8 @@ func DefaultSettings() *Settings {
         VimNavigation:  false,
         Keys: KeyBindings{
             Encourage:      "1",
-            DressUp:        "2",
+            Flirt:          "2",
+            DressUp:        "3",
             BackgroundMode: "b",
             Quit:           "q",
         },

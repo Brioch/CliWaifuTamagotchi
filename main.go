@@ -17,8 +17,10 @@ type Assets struct {
 	head           string
 	headBlink      string
 	happyHead      string
+	winkHead       string
 	body           string
 	encouragements []string
+	flirts         []string
 }
 
 // Load all ASCII and text assets
@@ -28,12 +30,19 @@ func loadAssets() (*Assets, error) {
 		return nil, fmt.Errorf("could not load encouragements: %v", err)
 	}
 
+	flirts, err := utils.LoadFlirts("assets/words-of-flirt.txt")
+	if err != nil {
+		return nil, fmt.Errorf("could not load flirts: %v", err)
+	}
+
 	return &Assets{
 		head:           utils.LoadASCII("ascii-arts/expressions/neutral"),
 		headBlink:      utils.LoadASCII("ascii-arts/expressions/neutral-blink"),
 		happyHead:      utils.LoadASCII("ascii-arts/expressions/-happy"),
+		winkHead:      utils.LoadASCII("ascii-arts/expressions/wink"),
 		body:           utils.LoadASCII("ascii-arts/clothes/seifuku"),
 		encouragements: encouragements,
+		flirts:         flirts,
 	}, nil
 }
 
@@ -98,6 +107,16 @@ func setupActionSpace(ui *UI, assets *Assets, encourageLocked *bool, currentBody
 		}
 	})
 
+	ui.actionSpace.AddItem("Flirt", "  Get a flirty message.", rune(keys.Flirt[0]), func() {
+		if !*encourageLocked {
+			*encourageLocked = true
+			utils.Encourage(ui.app, ui.waifuArt, ui.chatBox,
+				assets.head, assets.winkHead, *currentBody,
+				assets.flirts, 1*time.Second,
+				func() { *encourageLocked = false })
+		}
+	})
+
 	ui.actionSpace.AddItem("Dress Up", "  Change her outfit.", rune(keys.DressUp[0]), func() {
 		if !utils.LockGridChanges {
 			utils.DressUp(ui.app, ui.waifuArt, ui.chatBox,
@@ -131,6 +150,14 @@ func setGlobalKeys(ui *UI, assets *Assets, encourageLocked *bool, currentBody *s
 					func() { *encourageLocked = false })
 			}
 			return nil
+		case rune(keys.Flirt[0]):
+			if !*encourageLocked {
+				*encourageLocked = true
+				utils.Flirt(ui.app, ui.waifuArt, ui.chatBox,
+					assets.head, assets.happyHead, *currentBody,
+					assets.flirts, 1*time.Second,
+					func() { *encourageLocked = false })
+			}
 		case rune(keys.DressUp[0]):
 			if !utils.LockGridChanges {
 				utils.DressUp(ui.app, ui.waifuArt, ui.chatBox,
