@@ -22,7 +22,7 @@ Preview:
     - [utils/happiness.go](#utilshappinessgo)
     - [utils/palette-utils.go](#utilspalette-utilsgo)
     - [utils/settings.go](#utilssettingsgo)
-- [📜 Notes](#-notes)
+- [📜 Notes & Error handling](#-notes--error-handling)
 
 ---
 
@@ -43,7 +43,7 @@ No tons of loops - only one function that repeats itself every 5 seconds. Everyt
 ## 🎬 Launching Process
 
 <details>
-  <summary>Brew (macOS)</summary>
+  <summary><b>Brew</b> (macOS)</summary>
 
   1. **Install**
 
@@ -62,7 +62,30 @@ No tons of loops - only one function that repeats itself every 5 seconds. Everyt
 </details>
 
 <details>
-  <summary>Git (Source code) (Linux)</summary>
+  <summary><b>AUR</b> (Arch)</summary>
+
+  1. **Install**
+
+  ```bash
+  yay -S cliwt
+  ```
+  or
+  ```bash
+  paru -S cliwt
+  ```
+
+  2. **Run**
+
+  ```bash
+  cliwt
+  ```
+
+  ---
+
+</details>
+
+<details>
+  <summary><b>Git</b> (Source code)</summary>
 
   1. **Clone repository**
 
@@ -204,16 +227,22 @@ CliWaifuTamagotchi/
 
 ---
 
-## 📜 Notes
+## 📜 Notes & Error handling
 
+#### **Errors:**
+* See errors you can't explain? Try to remove `~/.config/cliwaifutamagotchi/` directory (you can do a backup). If it worked, it means customization was updated and there was a conflict.
+* If error remains, leave the issue, we could solve it together!
+
+#### **Warning:**
 * Missing/malformed ASCII files may cause a wrong output; handle carefully if modifying assets inside the structure.
-* Future plans:
-    * More interactions (feeding, timed events, stats).
-    * Save selected outfit and preferences.
-    * Unit tests and error handling improvements.
-    * Husbando version ("Swap Mode").
-    * Maybe "Pose Mode" - loop animation or specific pose to select and have on the background.
-    * Maybe handle stderr so Waifu reacts to the errors you get during your work.
+
+#### **Future plans:**
+* More interactions (feeding, timed events, stats).
+* Save selected outfit and preferences.
+* Unit tests and error handling improvements.
+* Husbando version ("Swap Mode").
+* Maybe "Pose Mode" - loop animation or specific pose to select and have on the background.
+* Maybe handle stderr so Waifu reacts to the errors you get during your work.
 
 ---
 
