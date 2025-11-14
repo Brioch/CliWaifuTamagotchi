@@ -34,7 +34,7 @@ CliWaifuTamagotchi is a **terminal-based tamagotchi** that:
 - Uses a **persistent color palette** stored in `~/.config/cliwaifutamagotchi/palette.json`.
 - Uses **persistent detail settings** stored in `~/.config/cliwaifutamagotchi/settings.json`.
 - Minimal UI built using **`tview` and `tcell`**.
-- **Vim-style navigation**: Use `h`, `j`, `k`, `l` keys for intuitive navigation and selection.
+- **Vim-style navigation**: Use `h`, `j`, `k`, `l` keys for intuitive navigation and selection (Must be enabled in setttings.json).
 
 No tons of loops - only one function that repeats itself every 5 seconds. Everything handles and updates according to it.
 
